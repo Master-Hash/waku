@@ -9,9 +9,9 @@
     "start": "waku start"
   },
   "dependencies": {
-    "react": "~19.2.3",
-    "react-dom": "~19.2.3",
-    "react-server-dom-webpack": "~19.2.3",
+    "react": "19.3.0-canary-65eec428-20251218",
+    "react-dom": "19.3.0-canary-65eec428-20251218",
+    "react-server-dom-webpack": "19.3.0-canary-65eec428-20251218",
     "waku": "1.0.0-alpha.0"
   },
   "devDependencies": {
