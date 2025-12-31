@@ -234,24 +234,6 @@ test.describe(`create-pages`, () => {
     ({ port, stopApp } = await startApp(mode));
   });
 
-  // https://github.com/wakujs/waku/issues/1255
-  test('long suspense', async ({ page }) => {
-    await page.goto(`http://localhost:${port}/long-suspense/1`);
-    await waitForHydration(page);
-    await expect(page.getByTestId('long-suspense-component')).toHaveCount(2);
-    await expect(
-      page.getByRole('heading', { name: 'Long Suspense Page 1' }),
-    ).toBeVisible();
-    const pendingSeen = waitForSelectorSeen(page, PENDING_SELECTOR);
-    await clickClientLink(page, '/long-suspense/2');
-    await pendingSeen;
-    await waitForSelectorText(page, SELECTOR, 'Long Suspense Page 2');
-    await clickClientLink(page, '/long-suspense/3');
-    await waitForSelectorText(page, SELECTOR, 'Long Suspense Page 3');
-    await clickClientLink(page, '/long-suspense/2');
-    await waitForSelectorText(page, SELECTOR, 'Long Suspense Page 2');
-  });
-
   // https://github.com/wakujs/waku/issues/1437
   test('static long suspense', async ({ page }) => {
     await page.goto(`http://localhost:${port}/static-long-suspense/4`);
