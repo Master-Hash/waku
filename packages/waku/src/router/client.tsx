@@ -644,7 +644,6 @@ const InnerRouter = ({
         }
       }
       startTransitionFn(() => {
-        console.log(4)
         if (signalRef.current === options.signal) {
           if (options.shouldScroll) {
             handleScroll();
@@ -694,9 +693,8 @@ const InnerRouter = ({
         async precommitHandler() {
           if (signalRef.current) {
             // It happens when click very fast.
-            console.warn("Potential race condition.")
+            console.warn('Potential race condition.');
           }
-          console.log(1)
           signalRef.current = event.signal;
           startTransition(async () => {
             // addTransitionType('navigation-' + navigationType);
@@ -724,7 +722,6 @@ const InnerRouter = ({
               });
             }
             if (signalRef.current === event.signal) {
-              console.log(5)
               signalRef.current = null;
             }
           });
