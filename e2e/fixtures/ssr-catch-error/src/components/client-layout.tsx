@@ -1,16 +1,11 @@
 'use client';
 
-import { useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import type { FallbackProps } from 'react-error-boundary';
 import { Link } from 'waku';
 
-const FallbackComponent = ({ error, resetErrorBoundary }: FallbackProps) => {
-  useEffect(() => {
-    window.addEventListener('popstate', resetErrorBoundary);
-    return () => window.removeEventListener('popstate', resetErrorBoundary);
-  }, [resetErrorBoundary]);
+const FallbackComponent = ({ error }: FallbackProps) => {
   return (
     <div role="alert">
       <p>Unexpected error in client fallback</p>
@@ -40,7 +35,10 @@ export const ClientLayout = ({ children }: { children: ReactNode }) => {
           <Link to="/no-error">/no-error</Link>
         </li>
       </ul>
-      <ErrorBoundary FallbackComponent={FallbackComponent}>
+      <ErrorBoundary
+        FallbackComponent={FallbackComponent}
+        resetKeys={'location' in globalThis ? [location.pathname] : []}
+      >
         {children}
       </ErrorBoundary>
     </div>
