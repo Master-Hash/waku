@@ -567,14 +567,13 @@ class CustomErrorHandler extends Component<
   constructor(props: { has404: boolean; children?: ReactNode }) {
     super(props);
     this.state = { error: null };
-    this.reset = this.reset.bind(this);
   }
   static getDerivedStateFromError(error: unknown) {
     return { error };
   }
-  reset() {
+  reset = () => {
     this.setState({ error: null });
-  }
+  };
   render() {
     const { error } = this.state;
     if (error !== null) {
