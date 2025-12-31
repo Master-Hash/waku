@@ -3,38 +3,14 @@ import { Link } from 'waku/router/client';
 
 import '../styles.css';
 
-const Pending = ({ isPending }: { isPending: boolean }) => (
-  <span
-    style={{
-      marginLeft: 5,
-      transition: 'opacity 75ms 100ms',
-      opacity: isPending ? 1 : 0,
-    }}
-  >
-    Pending...
-  </span>
-);
-
 const HomeLayout = ({ children }: { children: ReactNode }) => (
   <div>
     <ul>
       <li>
-        <Link
-          to="/"
-          unstable_pending={<Pending isPending />}
-          unstable_notPending={<Pending isPending={false} />}
-        >
-          Home
-        </Link>
+        <Link to="/">Home</Link>
       </li>
       <li>
-        <Link
-          to="/foo"
-          unstable_pending={<Pending isPending />}
-          unstable_notPending={<Pending isPending={false} />}
-        >
-          Foo
-        </Link>
+        <Link to="/foo">Foo</Link>
       </li>
       <li>
         <Link to="/bar" unstable_prefetchOnEnter>
