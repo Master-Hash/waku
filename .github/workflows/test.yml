@@ -2,7 +2,7 @@ name: Test
 
 on:
   push:
-    branches: [main]
+    branches: [main, rash-router]
   pull_request:
     types: [opened, synchronize]
   merge_group:
