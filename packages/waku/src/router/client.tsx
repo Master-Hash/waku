@@ -6,7 +6,6 @@ import {
   startTransition,
   use,
   useCallback,
-  useContext,
   useEffect,
   useRef,
   useState,
@@ -137,7 +136,7 @@ const RouterContext = createContext<{
 } | null>(null);
 
 export function useRouter() {
-  const router = useContext(RouterContext);
+  const router = use(RouterContext);
   if (!router) {
     throw new Error('Missing Router');
   }
@@ -300,7 +299,7 @@ export function Link({
   ...props
 }: LinkProps): ReactElement {
   to = addBase(to, import.meta.env.WAKU_CONFIG_BASE_PATH);
-  const router = useContext(RouterContext);
+  const router = use(RouterContext);
   const changeRoute = router
     ? router.changeRoute
     : () => {
@@ -477,7 +476,7 @@ const NotFound = ({
   has404: boolean;
   reset: () => void;
 }) => {
-  const router = useContext(RouterContext);
+  const router = use(RouterContext);
   if (!router) {
     throw new Error('Missing Router');
   }
@@ -512,7 +511,7 @@ const Redirect = ({
   reset: () => void;
   handledErrorSet: WeakSet<object>;
 }) => {
-  const router = useContext(RouterContext);
+  const router = use(RouterContext);
   if (!router) {
     throw new Error('Missing Router');
   }
@@ -620,7 +619,7 @@ export function Slice({
       fallback: ReactNode;
     }
 )) {
-  const router = useContext(RouterContext);
+  const router = use(RouterContext);
   if (!router) {
     throw new Error('Missing Router');
   }
