@@ -649,7 +649,7 @@ const InnerRouter = ({
         }
       }
       startTransitionFn(() => {
-        if (signalRef.current === options.signal) {
+        if (signalRef.current === options.signal && !options.signal.aborted) {
           if (options.shouldScroll) {
             handleScroll();
           }
