@@ -397,7 +397,7 @@ class CustomErrorHandler extends Component<
   { has404: boolean; children?: ReactNode },
   { error: unknown | null }
 > {
-  private handledErrorSet = new WeakSet();
+  #handledErrorSet = new WeakSet();
   constructor(props: { has404: boolean; children?: ReactNode }) {
     super(props);
     this.state = { error: null };
@@ -421,7 +421,7 @@ class CustomErrorHandler extends Component<
             error={error}
             to={info.location}
             reset={this.reset}
-            handledErrorSet={this.handledErrorSet}
+            handledErrorSet={this.#handledErrorSet}
           />
         );
       }
