@@ -117,7 +117,10 @@ type SliceId = string;
 
 const PendingContext = createContext<boolean>(false);
 
-export function usePending() {
+// Not sure whether this is necessary
+// We have navigation.transition
+// but it's not reactive
+export function isPending() {
   return use(PendingContext);
 }
 
@@ -752,7 +755,7 @@ const InnerRouter = ({
     resolver.current = null;
   }, [route]);
 
-  const resolver = useRef(null as ((value: undefined) => void) | null);
+  const resolver = useRef<((value: undefined) => void) | null>(null);
 
   async function flushAsync() {
     const deferred = Promise.withResolvers();
