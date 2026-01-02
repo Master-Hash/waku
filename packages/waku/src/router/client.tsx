@@ -19,6 +19,7 @@ import type {
   RefObject,
   TransitionFunction,
 } from 'react';
+import { flushSync } from 'react-dom';
 import { getErrorInfo } from '../lib/utils/custom-errors.js';
 import { addBase, removeBase } from '../lib/utils/path.js';
 import {
@@ -39,7 +40,6 @@ import {
   encodeSliceId,
 } from './common.js';
 import type { RouteProps } from './common.js';
-import { flushSync } from 'react-dom';
 
 type AllowPathDecorators<Path extends string> = Path extends unknown
   ? Path | `${Path}?${string}` | `${Path}#${string}`
@@ -120,7 +120,7 @@ const PendingContext = createContext<boolean>(false);
 // Not sure whether this is necessary
 // We have navigation.transition
 // but it's not reactive
-export function isPending() {
+export function usePending() {
   return use(PendingContext);
 }
 
@@ -717,6 +717,17 @@ const InnerRouter = ({
               } else if (nextIndex < previousIndex) {
                 // addTransitionType('navigation-back');
               }
+              if (!has404 && errorHandlerRef.current?.state.error) {
+                const info = getErrorInfo(errorHandlerRef.current?.state.error);
+                if (info?.status === 404) {
+                  // if 404 sans 404.tsx, manually go back
+                  // should make CustomErrorHandler state
+                  // Haha, upstream is broken too
+
+                  // FIXME: error when click a broken link, back, and click again
+                  errorHandlerRef.current?.reset();
+                }
+              }
               await changeRoute(route, {
                 shouldScroll: false,
                 unstable_startTransition: startTransition,
@@ -724,12 +735,6 @@ const InnerRouter = ({
               }).catch((err) => {
                 console.log('Error while navigating back:', err);
               });
-              // if 404 sans 404.tsx, manually go back
-              // should make CustomErrorHandler state
-
-              // Haha, upstream is broken too
-
-              errorHandlerRef.current?.reset();
             } else {
               prefetchRoute(route);
               await changeRoute(route, {
@@ -755,7 +760,7 @@ const InnerRouter = ({
     return () => {
       window.navigation.removeEventListener('navigate', callback);
     };
-  }, [changeRoute, prefetchRoute]);
+  }, [changeRoute, prefetchRoute, has404]);
 
   // run after new route DOM mounted
   useEffect(() => {
@@ -782,7 +787,9 @@ const InnerRouter = ({
   const rootElement = (
     <Slot id="root">
       <meta name="httpstatus" content={httpStatus} />
-      <CustomErrorHandler ref={errorHandlerRef} has404={has404}>{routeElement}</CustomErrorHandler>
+      <CustomErrorHandler ref={errorHandlerRef} has404={has404}>
+        {routeElement}
+      </CustomErrorHandler>
     </Slot>
   );
   return (
