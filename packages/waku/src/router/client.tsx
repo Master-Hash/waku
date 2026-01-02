@@ -562,6 +562,8 @@ const InnerRouter = ({
   }, [elementsPromise]);
 
   const enhanceFetchRscInternal = useEnhanceFetchRscInternal();
+  // It doesn't have to be a ref
+  // But passing it to multiple function calls is too complicated
   const signalRef = useRef<AbortSignal | null>(null);
   useEffect(() => {
     const enhanceFetch =
@@ -649,7 +651,7 @@ const InnerRouter = ({
         }
       }
       startTransitionFn(() => {
-        if (signalRef.current === options.signal && !options.signal.aborted) {
+        if (!options.signal?.aborted) {
           if (options.shouldScroll) {
             handleScroll();
           }
@@ -700,7 +702,7 @@ const InnerRouter = ({
         async precommitHandler() {
           if (signalRef.current) {
             // It happens when click very fast.
-            console.warn('Potential race condition.');
+            console.warn('Potential race condition due to rapid navigation.');
           }
           signalRef.current = event.signal;
           startTransition(async () => {
