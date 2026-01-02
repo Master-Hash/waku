@@ -731,6 +731,9 @@ const InnerRouter = ({
                 shouldScroll: false,
                 unstable_startTransition: startTransition,
                 signal: event.signal,
+              }).catch((_err) => {
+                // Handle 404, etc here
+                // console.log('Error while navigating:', err);
               });
             }
             if (signalRef.current === event.signal) {
