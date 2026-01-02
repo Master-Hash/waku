@@ -20,7 +20,6 @@ import type {
   TransitionFunction,
 } from 'react';
 import { preloadModule } from 'react-dom';
-import { flushSync } from 'react-dom';
 import { getErrorInfo } from '../lib/utils/custom-errors.js';
 import { addBase, removeBase } from '../lib/utils/path.js';
 import {
@@ -398,33 +397,31 @@ const Redirect = ({
 };
 
 class CustomErrorHandler extends Component<
-  { has404: boolean; children?: ReactNode },
-  { error: unknown | null }
+  { has404: boolean; error: unknown; reset: () => void; children?: ReactNode },
+  {}
 > {
   #handledErrorSet = new WeakSet();
-  constructor(props: { has404: boolean; children?: ReactNode }) {
+  constructor(props: {
+    has404: boolean;
+    error: unknown;
+    reset: () => void;
+    children?: ReactNode;
+  }) {
     super(props);
-    this.state = { error: null };
   }
-  static getDerivedStateFromError(error: unknown) {
-    return { error };
-  }
-  reset = () => {
-    this.setState({ error: null });
-  };
   render() {
-    const { error } = this.state;
+    const { error, reset } = this.props;
     if (error !== null) {
       const info = getErrorInfo(error);
       if (info?.status === 404) {
-        return <NotFound has404={this.props.has404} reset={this.reset} />;
+        return <NotFound has404={this.props.has404} reset={reset} />;
       }
       if (info?.location) {
         return (
           <Redirect
             error={error}
             to={info.location}
-            reset={this.reset}
+            reset={reset}
             handledErrorSet={this.#handledErrorSet}
           />
         );
@@ -434,10 +431,6 @@ class CustomErrorHandler extends Component<
     return this.props.children;
   }
 }
-
-const ThrowError = ({ error }: { error: unknown }) => {
-  throw error;
-};
 
 const getRouteSlotId = (path: string) => 'route:' + path;
 const getSliceSlotId = (id: SliceId) => 'slice:' + id;
@@ -652,9 +645,10 @@ const InnerRouter = ({
             // Workaround: after setErr, CustomErrorHandler is not rerendered!
             // Why is that?
             // Luckily this is not on happy path.
-            flushSync(() => {
-              setErr(e);
-            });
+            // Update: this causes more bugs.
+            // flushSync(() => {
+            setErr(e);
+            // });
             throw e;
           }
         }
@@ -684,6 +678,9 @@ const InnerRouter = ({
   }, []);
 
   const [isPending, startTransition] = useTransition();
+  const reset = useCallback(() => {
+    setErr(null);
+  }, []);
 
   // https://github.com/facebook/react/blob/main/fixtures/view-transition/src/components/App.js
   useEffect(() => {
@@ -724,15 +721,15 @@ const InnerRouter = ({
               } else if (nextIndex < previousIndex) {
                 // addTransitionType('navigation-back');
               }
-              if (!has404 && errorHandlerRef.current?.state.error) {
-                const info = getErrorInfo(errorHandlerRef.current?.state.error);
+              if (!has404 && err) {
+                const info = getErrorInfo(err);
                 if (info?.status === 404) {
                   // if 404 sans 404.tsx, manually go back
                   // should make CustomErrorHandler state
                   // Haha, upstream is broken too
 
                   // FIXME: error when click a broken link, back, and click again
-                  errorHandlerRef.current?.reset();
+                  reset();
                 }
               }
               await changeRoute(route, {
@@ -767,7 +764,7 @@ const InnerRouter = ({
     return () => {
       window.navigation.removeEventListener('navigate', callback);
     };
-  }, [changeRoute, prefetchRoute, has404]);
+  }, [changeRoute, prefetchRoute, has404, err, reset]);
 
   // run after new route DOM mounted
   useEffect(() => {
@@ -784,17 +781,11 @@ const InnerRouter = ({
     return;
   }
 
-  const errorHandlerRef = useRef<CustomErrorHandler>(null);
-  const routeElement =
-    err !== null ? (
-      <ThrowError error={err} />
-    ) : (
-      <Slot id={getRouteSlotId(route.path)} />
-    );
+  const routeElement = <Slot id={getRouteSlotId(route.path)} />;
   const rootElement = (
     <Slot id="root">
       <meta name="httpstatus" content={httpStatus} />
-      <CustomErrorHandler ref={errorHandlerRef} has404={has404}>
+      <CustomErrorHandler error={err} has404={has404} reset={reset}>
         {routeElement}
       </CustomErrorHandler>
     </Slot>
