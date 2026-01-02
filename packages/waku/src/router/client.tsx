@@ -40,6 +40,7 @@ import {
   encodeSliceId,
 } from './common.js';
 import type { RouteProps } from './common.js';
+import { flushSync } from 'react-dom';
 
 type AllowPathDecorators<Path extends string> = Path extends unknown
   ? Path | `${Path}?${string}` | `${Path}#${string}`
@@ -648,7 +649,12 @@ const InnerRouter = ({
           if (e instanceof Error && e.name === 'AbortError') {
             // Noop
           } else {
-            setErr(e);
+            // Workaround: after setErr, CustomErrorHandler is not rerendered!
+            // Why is that?
+            // Luckily this is not on happy path.
+            flushSync(() => {
+              setErr(e);
+            });
             throw e;
           }
         }
@@ -725,6 +731,12 @@ const InnerRouter = ({
               }).catch((err) => {
                 console.log('Error while navigating back:', err);
               });
+              // if 404 sans 404.tsx, manually go back
+              // should make CustomErrorHandler state
+
+              // Haha, upstream is broken too
+
+              errorHandlerRef.current?.reset();
             } else {
               prefetchRoute(route);
               await changeRoute(route, {
@@ -756,7 +768,7 @@ const InnerRouter = ({
   useEffect(() => {
     resolver.current?.(undefined);
     resolver.current = null;
-  }, [route]);
+  }, [route, err]);
 
   const resolver = useRef<((value: undefined) => void) | null>(null);
 
@@ -767,6 +779,7 @@ const InnerRouter = ({
     return;
   }
 
+  const errorHandlerRef = useRef<CustomErrorHandler>(null);
   const routeElement =
     err !== null ? (
       <ThrowError error={err} />
@@ -776,7 +789,7 @@ const InnerRouter = ({
   const rootElement = (
     <Slot id="root">
       <meta name="httpstatus" content={httpStatus} />
-      <CustomErrorHandler has404={has404}>{routeElement}</CustomErrorHandler>
+      <CustomErrorHandler ref={errorHandlerRef} has404={has404}>{routeElement}</CustomErrorHandler>
     </Slot>
   );
   return (
