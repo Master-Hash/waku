@@ -342,24 +342,11 @@ export class ErrorBoundary extends Component<
   }
 }
 
-const NotFound = ({
-  has404,
-  reset,
-}: {
-  has404: boolean;
-  reset: () => void;
-}) => {
+const NotFound = ({ has404 }: { has404: boolean }) => {
   const router = use(RouterContext);
   if (!router) {
     throw new Error('Missing Router');
   }
-  const { changeRoute } = router;
-  useEffect(() => {
-    if (has404) {
-      const url = new URL('/404', window.location.href);
-      window.navigation.navigate(url);
-    }
-  }, [has404, reset, changeRoute]);
   return has404 ? null : <h1>Not Found</h1>;
 };
 
@@ -414,7 +401,7 @@ class CustomErrorHandler extends Component<
     if (error !== null) {
       const info = getErrorInfo(error);
       if (info?.status === 404) {
-        return <NotFound has404={this.props.has404} reset={reset} />;
+        return <NotFound has404={this.props.has404} />;
       }
       if (info?.location) {
         return (
@@ -647,7 +634,6 @@ const InnerRouter = ({
             // Luckily this is not on happy path.
             // Update: this causes more bugs.
             // flushSync(() => {
-            setErr(e);
             // });
             throw e;
           }
@@ -721,7 +707,7 @@ const InnerRouter = ({
               } else if (nextIndex < previousIndex) {
                 // addTransitionType('navigation-back');
               }
-              if (!has404 && err) {
+              if (err) {
                 const info = getErrorInfo(err);
                 if (info?.status === 404) {
                   // if 404 sans 404.tsx, manually go back
@@ -741,14 +727,28 @@ const InnerRouter = ({
               });
             } else {
               prefetchRoute(route);
-              await changeRoute(route, {
-                shouldScroll: false,
-                unstable_startTransition: startTransition,
-                signal: event.signal,
-              }).catch((_err) => {
+              try {
+                await changeRoute(route, {
+                  shouldScroll: false,
+                  unstable_startTransition: startTransition,
+                  signal: event.signal,
+                });
+              } catch (err) {
                 // Handle 404, etc here
-                // console.log('Error while navigating:', err);
-              });
+                setErr(err);
+                if (has404 && err) {
+                  const info = getErrorInfo(err);
+                  if (info?.status === 404) {
+                    await changeRoute(
+                      { path: '/404', query: '', hash: '' },
+                      {
+                        signal: event.signal,
+                        shouldScroll: false,
+                      },
+                    );
+                  }
+                }
+              }
             }
             if (signalRef.current === event.signal) {
               signalRef.current = null;
