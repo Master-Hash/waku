@@ -582,7 +582,20 @@ const InnerRouter = ({
             enhancedFetch,
           ) as Promise<Elements> | undefined;
           Promise.resolve(elementsPromise)
-            .then(() => {})
+            .then((elements = {}) => {
+              const { [ROUTE_ID]: routeData, [IS_STATIC_ID]: isStatic } =
+                elements;
+              if (routeData) {
+                const [path, query] = routeData as [string, string];
+                if (
+                  requestedRouteRef.current.path !== path ||
+                  (!isStatic && requestedRouteRef.current.query !== query)
+                ) {
+                  // redirected
+                  window.navigation.navigate(path, { history: 'replace' });
+                }
+              }
+            })
             .catch(() => {});
           return elementsPromise as never;
         },
