@@ -396,7 +396,14 @@ const Redirect = ({
     const url = new URL(to, window.location.href);
     window.navigation
       .navigate(url, { history: 'replace' })
-      .committed?.then(() => {
+      .committed
+      ?.then(() => {
+        // FIXME
+        // ssr-redirect > access sync page with client navigation
+        return new Promise((resolve) => setTimeout(resolve, 200));
+      })
+      ?.then(() => {
+        console.trace('Redirected to', to);
         reset();
       });
   }, [error, handledErrorSet, reset, to]);
@@ -432,14 +439,14 @@ class CustomErrorHandler extends Component<
       if (info?.location) {
         return (
           <Redirect
-            error={error}
+            error={error ?? this.state.serverError}
             to={info.location}
             reset={this.reset}
             handledErrorSet={this.#handledErrorSet}
           />
         );
       }
-      return <ErrorBoundary error={error}>{null}</ErrorBoundary>;
+      return <ErrorBoundary error={error ?? this.state.serverError}>{null}</ErrorBoundary>;
     }
     return this.props.children;
   }
