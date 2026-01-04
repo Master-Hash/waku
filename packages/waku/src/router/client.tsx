@@ -342,11 +342,24 @@ export class ErrorBoundary extends Component<
   }
 }
 
-const NotFound = ({ has404 }: { has404: boolean }) => {
+const NotFound = ({ has404, reset }: { has404: boolean; reset: () => void }) => {
   const router = use(RouterContext);
   if (!router) {
     throw new Error('Missing Router');
   }
+  const { changeRoute } = router;
+  useEffect(() => {
+    if (has404) {
+      const url = new URL('/404', window.location.href);
+      changeRoute(parseRoute(url), { shouldScroll: false })
+        .then(() => {
+          reset();
+        })
+        .catch((err) => {
+          console.log('Error while navigating to 404:', err);
+        });
+    }
+  }, [has404, reset, changeRoute]);
   return has404 ? null : <h1>Not Found</h1>;
 };
 
@@ -384,31 +397,37 @@ const Redirect = ({
 };
 
 class CustomErrorHandler extends Component<
-  { has404: boolean; error: unknown; reset: () => void; children?: ReactNode },
-  {}
+  { has404: boolean; error: unknown; children?: ReactNode },
+  { serverError: unknown | null}
 > {
   #handledErrorSet = new WeakSet();
   constructor(props: {
     has404: boolean;
     error: unknown;
-    reset: () => void;
     children?: ReactNode;
   }) {
     super(props);
+    this.state = { serverError: null };
+  }
+  static getDerivedStateFromError(error: unknown) {
+    return { serverError: error };
+  }
+  reset = () => {
+    this.setState({ serverError: null });
   }
   render() {
-    const { error, reset } = this.props;
-    if (error !== null) {
-      const info = getErrorInfo(error);
+    const { error } = this.props;
+    if (error !== null || this.state.serverError !== null) {
+      const info = getErrorInfo(error ?? this.state.serverError);
       if (info?.status === 404) {
-        return <NotFound has404={this.props.has404} />;
+        return <NotFound has404={this.props.has404} reset={this.reset} />;
       }
       if (info?.location) {
         return (
           <Redirect
             error={error}
             to={info.location}
-            reset={reset}
+            reset={this.reset}
             handledErrorSet={this.#handledErrorSet}
           />
         );
@@ -798,7 +817,7 @@ const InnerRouter = ({
   const rootElement = (
     <Slot id="root">
       <meta name="httpstatus" content={httpStatus} />
-      <CustomErrorHandler error={err} has404={has404} reset={reset}>
+      <CustomErrorHandler error={err} has404={has404}>
         {routeElement}
       </CustomErrorHandler>
     </Slot>
