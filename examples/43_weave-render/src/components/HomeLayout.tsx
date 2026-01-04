@@ -3,18 +3,6 @@ import { Link } from 'waku/router/client';
 
 import '../styles.css';
 
-const Pending = ({ isPending }: { isPending: boolean }) => (
-  <span
-    style={{
-      marginLeft: 5,
-      transition: 'opacity 75ms 100ms',
-      opacity: isPending ? 1 : 0,
-    }}
-  >
-    Pending...
-  </span>
-);
-
 const getCurrentTime = () => new Date();
 
 const HomeLayout = ({ children }: { children: ReactNode }) => {
