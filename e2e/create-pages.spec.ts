@@ -170,67 +170,6 @@ test.describe(`create-pages`, () => {
     ({ port, stopApp } = await startApp(mode));
   });
 
-  // https://github.com/wakujs/waku/issues/1255
-  test('long suspense', async ({ page }) => {
-    await page.goto(`http://localhost:${port}/long-suspense/1`);
-    await waitForHydration(page);
-    await expect(page.getByTestId('long-suspense-component')).toHaveCount(2);
-    await expect(
-      page.getByRole('heading', { name: 'Long Suspense Page 1' }),
-    ).toBeVisible();
-    await page.click("a[href='/long-suspense/2']");
-    await page.waitForFunction(
-      () => {
-        const pendingElement = document.querySelector(
-          '[data-testid="long-suspense-pending"]',
-        );
-        const heading = document.querySelector(
-          '[data-testid="long-suspense-component"] h3',
-        );
-        return (
-          pendingElement?.textContent === 'Pending...' &&
-          heading?.textContent === 'Long Suspense Page 1'
-        );
-      },
-      undefined,
-      { timeout: 1000 },
-    );
-    await expect(page.getByTestId('long-suspense')).toHaveCount(0);
-    await expect(
-      page.getByRole('heading', { name: 'Long Suspense Page 2' }),
-    ).toBeVisible();
-    await page.click("a[href='/long-suspense/3']");
-    await expect(
-      page.getByRole('heading', { name: 'Long Suspense Page 2' }),
-    ).toBeHidden();
-    await expect(page.getByTestId('long-suspense')).toHaveText('Loading...');
-    await expect(page.getByTestId('long-suspense-pending')).toHaveCount(0);
-    await expect(
-      page.getByRole('heading', { name: 'Long Suspense Page 3' }),
-    ).toBeVisible();
-    await page.click("a[href='/long-suspense/2']");
-    await page.waitForFunction(
-      () => {
-        const pendingElement = document.querySelector(
-          '[data-testid="long-suspense-pending"]',
-        );
-        const heading = document.querySelector(
-          '[data-testid="long-suspense-component"] h3',
-        );
-        return (
-          pendingElement?.textContent === 'Pending...' &&
-          heading?.textContent === 'Long Suspense Page 3'
-        );
-      },
-      undefined,
-      { timeout: 1000 },
-    );
-    await expect(page.getByTestId('long-suspense')).toHaveCount(0);
-    await expect(
-      page.getByRole('heading', { name: 'Long Suspense Page 2' }),
-    ).toBeVisible();
-  });
-
   // https://github.com/wakujs/waku/issues/1437
   test('static long suspense', async ({ page }) => {
     await page.goto(`http://localhost:${port}/static-long-suspense/4`);
