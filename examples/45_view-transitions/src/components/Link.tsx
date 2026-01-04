@@ -11,5 +11,6 @@ const startViewTransition =
     : undefined;
 
 export function Link(props: ComponentProps<typeof OrigLink>) {
+  // @ts-expect-error please migrant to <ViewTransition>
   return <OrigLink {...props} unstable_startTransition={startViewTransition} />;
 }

@@ -22,6 +22,7 @@ export const StaticLongSuspenseLayout = ({
       <div>
         <Link
           to="/static-long-suspense/5"
+          // @ts-expect-error won't fix
           unstable_pending={
             <div data-testid="long-suspense-pending">Pending...</div>
           }
@@ -47,6 +48,7 @@ export const LongSuspenseLayout = ({ children }: { children: ReactNode }) => {
       <div>
         <Link
           to="/long-suspense/2"
+          // @ts-expect-error won't fix
           unstable_pending={
             <div data-testid="long-suspense-pending">Pending...</div>
           }
