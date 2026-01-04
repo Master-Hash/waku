@@ -28,31 +28,13 @@ const HomeLayout = ({ children }: { children: ReactNode }) => {
         <p>Last render time: {currentTime.toISOString()}</p>
         <ul>
           <li>
-            <Link
-              to="/"
-              unstable_pending={<Pending isPending />}
-              unstable_notPending={<Pending isPending={false} />}
-            >
-              Home
-            </Link>
+            <Link to="/">Home</Link>
           </li>
           <li>
-            <Link
-              to="/foo"
-              unstable_pending={<Pending isPending />}
-              unstable_notPending={<Pending isPending={false} />}
-            >
-              Foo
-            </Link>
+            <Link to="/foo">Foo</Link>
           </li>
           <li>
-            <Link
-              to="/bar"
-              unstable_pending={<Pending isPending />}
-              unstable_notPending={<Pending isPending={false} />}
-            >
-              Bar
-            </Link>
+            <Link to="/bar">Bar</Link>
           </li>
         </ul>
         {children}
