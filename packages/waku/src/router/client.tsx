@@ -715,9 +715,6 @@ const InnerRouter = ({
     const callback = ((event: NavigateEvent) => {
       if (
         !event.canIntercept ||
-        // If this is just a hashChange,
-        // just let the browser handle scrolling to the content.
-        event.hashChange ||
         // If this is a download,
         // let the browser perform the download.
         event.downloadRequest ||
@@ -725,6 +722,16 @@ const InnerRouter = ({
         // let that go to the server.
         event.formData
       ) {
+        return;
+      } else if (
+        // If this is just a hashChange,
+        // just let the browser handle scrolling to the content.
+        event.hashChange
+      ) {
+        setRoute((prev) => ({
+          ...prev,
+          hash: new URL(event.destination.url).hash,
+        }));
         return;
       }
       const url = new URL(event.destination.url);
