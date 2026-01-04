@@ -1,10 +1,8 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'waku/router/client';
 
 export const RoutingHandler = () => {
-  const router = useRouter();
   useEffect(() => {
     const onStart = () => {
       console.log('Route change started');
@@ -12,11 +10,11 @@ export const RoutingHandler = () => {
     const onComplete = () => {
       console.log('Route change completed');
     };
-    router.unstable_events.on('start', onStart);
-    router.unstable_events.on('complete', onComplete);
+    window.navigation.addEventListener('navigate', onStart);
+    window.navigation.addEventListener('navigatesuccess', onComplete);
     return () => {
-      router.unstable_events.off('start', onStart);
-      router.unstable_events.off('complete', onComplete);
+      window.navigation.removeEventListener('navigate', onStart);
+      window.navigation.removeEventListener('navigatesuccess', onComplete);
     };
   });
   return null;

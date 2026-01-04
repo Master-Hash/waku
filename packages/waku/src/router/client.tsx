@@ -321,7 +321,7 @@ function renderError(message: string) {
 }
 
 export class ErrorBoundary extends Component<
-  { children: ReactNode, error?: unknown },
+  { children: ReactNode; error?: unknown },
   { error?: unknown }
 > {
   constructor(props: { children: ReactNode }) {
@@ -396,8 +396,7 @@ const Redirect = ({
     const url = new URL(to, window.location.href);
     window.navigation
       .navigate(url, { history: 'replace' })
-      .committed
-      ?.then(() => {
+      .committed?.then(() => {
         // FIXME
         // ssr-redirect > access sync page with client navigation
         return new Promise((resolve) => setTimeout(resolve, 200));
@@ -446,7 +445,11 @@ class CustomErrorHandler extends Component<
           />
         );
       }
-      return <ErrorBoundary error={error ?? this.state.serverError}>{null}</ErrorBoundary>;
+      return (
+        <ErrorBoundary error={error ?? this.state.serverError}>
+          {null}
+        </ErrorBoundary>
+      );
     }
     return this.props.children;
   }
