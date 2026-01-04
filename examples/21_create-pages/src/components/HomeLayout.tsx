@@ -20,22 +20,10 @@ const HomeLayout = ({ children }: { children: ReactNode }) => (
     <RoutingHandler />
     <ul>
       <li>
-        <Link
-          to="/"
-          unstable_pending={<Pending isPending />}
-          unstable_notPending={<Pending isPending={false} />}
-        >
-          Home
-        </Link>
+        <Link to="/">Home</Link>
       </li>
       <li>
-        <Link
-          to="/foo"
-          unstable_pending={<Pending isPending />}
-          unstable_notPending={<Pending isPending={false} />}
-        >
-          Foo
-        </Link>
+        <Link to="/foo">Foo</Link>
       </li>
       <li>
         <Link to="/bar" unstable_prefetchOnEnter>

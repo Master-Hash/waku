@@ -21,31 +21,13 @@ const BarLayout = ({ children }: { children: ReactNode }) => {
       <p>This Layout is expected to be static</p>
       <ul>
         <li>
-          <Link
-            to="/"
-            unstable_pending={<Pending isPending />}
-            unstable_notPending={<Pending isPending={false} />}
-          >
-            Home
-          </Link>
+          <Link to="/">Home</Link>
         </li>
         <li>
-          <Link
-            to="/foo"
-            unstable_pending={<Pending isPending />}
-            unstable_notPending={<Pending isPending={false} />}
-          >
-            Foo
-          </Link>
+          <Link to="/foo">Foo</Link>
         </li>
         <li>
-          <Link
-            to={'/nested/bar' as never}
-            unstable_pending={<Pending isPending />}
-            unstable_notPending={<Pending isPending={false} />}
-          >
-            Link to 404
-          </Link>
+          <Link to={'/nested/bar' as never}>Link to 404</Link>
         </li>
       </ul>
       {children}
