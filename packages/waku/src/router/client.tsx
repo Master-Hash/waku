@@ -320,7 +320,7 @@ function renderError(message: string) {
 }
 
 export class ErrorBoundary extends Component<
-  { children: ReactNode },
+  { children: ReactNode, error?: unknown },
   { error?: unknown }
 > {
   constructor(props: { children: ReactNode }) {
@@ -331,17 +331,24 @@ export class ErrorBoundary extends Component<
     return { error };
   }
   render() {
-    if ('error' in this.state) {
-      if (this.state.error instanceof Error) {
-        return renderError(this.state.error.message);
+    if ('error' in this.state || 'error' in this.props) {
+      const error = this.state.error ?? this.props.error;
+      if (error instanceof Error) {
+        return renderError(error.message);
       }
-      return renderError(String(this.state.error));
+      return renderError(String(error));
     }
     return this.props.children;
   }
 }
 
-const NotFound = ({ has404, reset }: { has404: boolean; reset: () => void }) => {
+const NotFound = ({
+  has404,
+  reset,
+}: {
+  has404: boolean;
+  reset: () => void;
+}) => {
   const router = use(RouterContext);
   if (!router) {
     throw new Error('Missing Router');
@@ -397,7 +404,7 @@ const Redirect = ({
 
 class CustomErrorHandler extends Component<
   { has404: boolean; error: unknown; children?: ReactNode },
-  { serverError: unknown | null}
+  { serverError: unknown | null }
 > {
   #handledErrorSet = new WeakSet();
   constructor(props: {
@@ -413,9 +420,10 @@ class CustomErrorHandler extends Component<
   }
   reset = () => {
     this.setState({ serverError: null });
-  }
+  };
   render() {
     const { error } = this.props;
+    console.log("error??", error);
     if (error !== null || this.state.serverError !== null) {
       const info = getErrorInfo(error ?? this.state.serverError);
       if (info?.status === 404) {
@@ -431,7 +439,7 @@ class CustomErrorHandler extends Component<
           />
         );
       }
-      throw error;
+      return <ErrorBoundary error={error}>{null}</ErrorBoundary>;
     }
     return this.props.children;
   }
