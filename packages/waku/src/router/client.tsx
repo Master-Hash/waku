@@ -424,7 +424,6 @@ class CustomErrorHandler extends Component<
   };
   render() {
     const { error } = this.props;
-    console.log("error??", error);
     if (error !== null || this.state.serverError !== null) {
       const info = getErrorInfo(error ?? this.state.serverError);
       if (info?.status === 404) {
@@ -615,7 +614,7 @@ const InnerRouter = ({
               if (routeData) {
                 const [path, query] = routeData as [string, string];
                 if (
-                  requestedRouteRef.current.path !== path ||
+                  requestedRouteRef.current.path !== encodeURI(path) ||
                   (!isStatic && requestedRouteRef.current.query !== query)
                 ) {
                   // redirected
