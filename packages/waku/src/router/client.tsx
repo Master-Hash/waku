@@ -410,8 +410,8 @@ const Redirect = ({
 };
 
 class CustomErrorHandler extends Component<
-  { has404: boolean; error: unknown; children?: ReactNode },
-  { serverError: unknown | null }
+  { has404: boolean; children?: ReactNode },
+  { error: unknown | null }
 > {
   #handledErrorSet = new WeakSet();
   constructor(props: {
@@ -420,36 +420,31 @@ class CustomErrorHandler extends Component<
     children?: ReactNode;
   }) {
     super(props);
-    this.state = { serverError: null };
+    this.state = { error: null };
   }
   static getDerivedStateFromError(error: unknown) {
-    return { serverError: error };
+    return { error };
   }
   reset = () => {
-    this.setState({ serverError: null });
+    this.setState({ error: null });
   };
   render() {
-    const { error } = this.props;
-    if (error !== null || this.state.serverError !== null) {
-      const info = getErrorInfo(error ?? this.state.serverError);
+    if (this.state.error !== null) {
+      const info = getErrorInfo(this.state.error);
       if (info?.status === 404) {
         return <NotFound has404={this.props.has404} reset={this.reset} />;
       }
       if (info?.location) {
         return (
           <Redirect
-            error={error ?? this.state.serverError}
+            error={this.state.error}
             to={info.location}
             reset={this.reset}
             handledErrorSet={this.#handledErrorSet}
           />
         );
       }
-      return (
-        <ErrorBoundary error={error ?? this.state.serverError}>
-          {null}
-        </ErrorBoundary>
-      );
+      return <ErrorBoundary error={this.state.error}>{null}</ErrorBoundary>;
     }
     return this.props.children;
   }
@@ -661,13 +656,13 @@ const InnerRouter = ({
     });
   }, [initialRoute]);
 
-  const [err, setErr] = useState<unknown>(null);
+  const customErrorHandlerRef = useRef<CustomErrorHandler>(null);
   const changeRoute: ChangeRoute = useCallback(
     async (route, options) => {
       requestedRouteRef.current = route;
       const startTransitionFn =
         options.unstable_startTransition || ((fn: TransitionFunction) => fn());
-      setErr(null);
+      customErrorHandlerRef.current?.reset();
       const { skipRefetch } = options || {};
       if (!staticPathSetRef.current.has(route.path) && !skipRefetch) {
         const rscPath = encodeRoutePath(route.path);
@@ -713,9 +708,6 @@ const InnerRouter = ({
   }, []);
 
   const [isPending, startTransition] = useTransition();
-  const reset = useCallback(() => {
-    setErr(null);
-  }, []);
 
   // https://github.com/facebook/react/blob/main/fixtures/view-transition/src/components/App.js
   useEffect(() => {
@@ -763,6 +755,7 @@ const InnerRouter = ({
               } else if (nextIndex < previousIndex) {
                 // addTransitionType('navigation-back');
               }
+              const err = customErrorHandlerRef.current?.state.error;
               if (err) {
                 const info = getErrorInfo(err);
                 if (info?.status === 404) {
@@ -770,8 +763,7 @@ const InnerRouter = ({
                   // should make CustomErrorHandler state
                   // Haha, upstream is broken too
 
-                  // FIXME: error when click a broken link, back, and click again
-                  reset();
+                  customErrorHandlerRef.current?.reset();
                 }
               }
               await changeRoute(route, {
@@ -791,7 +783,7 @@ const InnerRouter = ({
                 });
               } catch (err) {
                 // Handle 404, etc here
-                setErr(err);
+                customErrorHandlerRef.current?.setState({ error: err });
                 if (has404 && err) {
                   const info = getErrorInfo(err);
                   if (info?.status === 404) {
@@ -820,13 +812,13 @@ const InnerRouter = ({
     return () => {
       window.navigation.removeEventListener('navigate', callback);
     };
-  }, [changeRoute, prefetchRoute, has404, err, reset]);
+  }, [changeRoute, prefetchRoute, has404]);
 
   // run after new route DOM mounted
   useEffect(() => {
     resolver.current?.(undefined);
     resolver.current = null;
-  }, [route, err]);
+  }, [route, customErrorHandlerRef.current?.state.error]);
 
   const resolver = useRef<((value: undefined) => void) | null>(null);
 
@@ -841,7 +833,7 @@ const InnerRouter = ({
   const rootElement = (
     <Slot id="root">
       <meta name="httpstatus" content={httpStatus} />
-      <CustomErrorHandler error={err} has404={has404}>
+      <CustomErrorHandler ref={customErrorHandlerRef} has404={has404}>
         {routeElement}
       </CustomErrorHandler>
     </Slot>
