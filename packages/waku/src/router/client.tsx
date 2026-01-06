@@ -395,7 +395,7 @@ const Redirect = ({
 
     const url = new URL(to, window.location.href);
     window.navigation
-      .navigate(url, { history: 'replace' })
+      .navigate(url, { history: 'push' })
       .committed?.then(() => {
         // FIXME
         // ssr-redirect > access sync page with client navigation
@@ -623,7 +623,7 @@ const InnerRouter = ({
                   (!isStatic && requestedRouteRef.current.query !== query)
                 ) {
                   // redirected
-                  window.navigation.navigate(path, { history: 'replace' });
+                  window.navigation.navigate(path, { history: 'push' });
                 }
               }
             })
