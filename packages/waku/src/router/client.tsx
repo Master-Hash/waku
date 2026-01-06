@@ -811,7 +811,7 @@ const InnerRouter = ({
   useEffect(() => {
     resolver.current?.(undefined);
     resolver.current = null;
-  }, [route, customErrorHandlerRef.current?.state.error]);
+  }, [route]);
 
   const resolver = useRef<((value: undefined) => void) | null>(null);
 
