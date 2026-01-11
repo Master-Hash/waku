@@ -567,7 +567,7 @@ const InnerRouter = ({
         if (routeData) {
           const [path, _query] = routeData as [string, string];
           if (isStatic) {
-            staticPathSetRef.current.add(path);
+            staticPathSetRef.current.add(encodeURI(path));
           }
         }
         cachedIdSetRef.current = new Set(Object.keys(rest));
@@ -587,7 +587,9 @@ const InnerRouter = ({
         input: RequestInfo | URL,
         init: RequestInit = { signal: signalRef.current },
       ) => {
-        const skipStr = JSON.stringify(Array.from(cachedIdSetRef.current));
+        const skipStr = JSON.stringify(
+          Array.from(cachedIdSetRef.current).map((i) => encodeURI(i)),
+        );
         const headers = (init.headers ||= {});
         if (Array.isArray(headers)) {
           headers.push([SKIP_HEADER, skipStr]);
