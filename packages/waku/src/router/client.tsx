@@ -515,16 +515,12 @@ const handleScroll = () => {
   });
 };
 
-const defaultRouteInterceptor = (route: RouteProps) => route;
-
 const InnerRouter = ({
   initialRoute,
   httpStatus,
-  routeInterceptor = defaultRouteInterceptor,
 }: {
   initialRoute: RouteProps;
   httpStatus: string | undefined;
-  routeInterceptor: ((route: RouteProps) => RouteProps | false) | undefined;
 }) => {
   if (import.meta.hot) {
     const refetchRoute = () => {
@@ -856,10 +852,8 @@ const InnerRouter = ({
 
 export function Router({
   initialRoute = parseRouteFromLocation(),
-  unstable_routeInterceptor,
 }: {
   initialRoute?: RouteProps;
-  unstable_routeInterceptor?: (route: RouteProps) => RouteProps | false;
 }) {
   const initialRscPath = encodeRoutePath(initialRoute.path);
   const initialRscParams = createRscParams(initialRoute.query);
@@ -869,7 +863,6 @@ export function Router({
       <InnerRouter
         initialRoute={initialRoute}
         httpStatus={httpStatus}
-        routeInterceptor={unstable_routeInterceptor}
       />
     </Root>
   );
@@ -925,8 +918,6 @@ export const unstable_addBase = addBase;
 export const unstable_removeBase = removeBase;
 export const unstable_RouterContext = RouterContext;
 export type Unstable_ChangeRoute = ChangeRoute;
-export type Unstable_ChangeRouteEvent = ChangeRouteEvent;
-export type Unstable_ChangeRouteCallback = ChangeRouteCallback;
 export type Unstable_PrefetchRoute = PrefetchRoute;
 export type Unstable_SliceId = SliceId;
 export type Unstable_InferredPaths = InferredPaths;
