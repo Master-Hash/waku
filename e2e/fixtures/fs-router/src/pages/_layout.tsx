@@ -26,29 +26,17 @@ const HomeLayout = ({ children }: { children: ReactNode }) => (
         <Link to="/nested/encoded%20path">Nested / Encoded Path</Link>
       </li>
       <li>
-        <Link
-          to="/nested/encoded%E6%B8%AC%E8%A9%A6path"
-          unstable_pending={<Pending isPending />}
-          unstable_notPending={<Pending isPending={false} />}
-        >
+        <Link to="/nested/encoded%E6%B8%AC%E8%A9%A6path">
           Nested / Encoded Unicode Path
         </Link>
       </li>
       <li>
-        <Link
-          to="/static-nested/encoded%20path"
-          unstable_pending={<Pending isPending />}
-          unstable_notPending={<Pending isPending={false} />}
-        >
+        <Link to="/static-nested/encoded%20path">
           Nested / Static Encoded Path
         </Link>
       </li>
       <li>
-        <Link
-          to="/static-nested/encoded%E6%B8%AC%E8%A9%A6path"
-          unstable_pending={<Pending isPending />}
-          unstable_notPending={<Pending isPending={false} />}
-        >
+        <Link to="/static-nested/encoded%E6%B8%AC%E8%A9%A6path">
           Nested / Static Encoded Unicode Path
         </Link>
       </li>
