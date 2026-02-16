@@ -321,7 +321,7 @@ function renderError(message: string) {
 }
 
 export class ErrorBoundary extends Component<
-  { children: ReactNode; error?: unknown },
+  { children: ReactNode },
   { error?: unknown }
 > {
   constructor(props: { children: ReactNode }) {
@@ -332,12 +332,11 @@ export class ErrorBoundary extends Component<
     return { error };
   }
   render() {
-    if ('error' in this.state || 'error' in this.props) {
-      const error = this.state.error ?? this.props.error;
-      if (error instanceof Error) {
-        return renderError(error.message);
+    if ('error' in this.state) {
+      if (this.state.error instanceof Error) {
+        return renderError(this.state.error.message);
       }
-      return renderError(String(error));
+      return renderError(String(this.state.error));
     }
     return this.props.children;
   }
@@ -408,7 +407,8 @@ const Redirect = ({
 
     void p
       .then(() => {
-        return window.navigation.navigate(url, { history: 'replace' }).committed;
+        return window.navigation.navigate(url, { history: 'replace' })
+          .committed;
       })
       ?.then(() => {
         console.trace('Redirected to', to);
@@ -453,7 +453,7 @@ class CustomErrorHandler extends Component<
           />
         );
       }
-      return <ErrorBoundary error={this.state.error}>{null}</ErrorBoundary>;
+      throw this.state.error;
     }
     return this.props.children;
   }
