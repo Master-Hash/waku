@@ -619,12 +619,16 @@ const InnerRouter = ({
                   requestedRouteRef.current.path !== path ||
                   (!isStatic && requestedRouteRef.current.query !== query)
                 ) {
-                  controllerRef.current?.redirect(path);
-                  requestedRouteRef.current = {
-                    ...requestedRouteRef.current,
-                    path,
-                    query,
-                  };
+                  if (controllerRef.current) {
+                    controllerRef.current?.redirect(path);
+                    requestedRouteRef.current = {
+                      ...requestedRouteRef.current,
+                      path,
+                      query,
+                    };
+                  } else {
+                    window.navigation.navigate(path, {history: "push"})
+                  }
                 }
               }
             })
