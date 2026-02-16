@@ -622,6 +622,11 @@ const InnerRouter = ({
                   (!isStatic && requestedRouteRef.current.query !== query)
                 ) {
                   controllerRef.current?.redirect(path);
+                  requestedRouteRef.current = {
+                    ...requestedRouteRef.current,
+                    path,
+                    query,
+                  };
                 }
               }
             })
@@ -686,7 +691,7 @@ const InnerRouter = ({
           if (options.shouldScroll) {
             handleScroll();
           }
-          setRoute(route);
+          setRoute(requestedRouteRef.current);
         }
       });
     },
