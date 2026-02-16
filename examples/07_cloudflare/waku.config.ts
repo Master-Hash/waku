@@ -11,7 +11,7 @@ export default defineConfig({
           include: ['hono/tiny'],
         },
         build: {
-          rollupOptions: {
+          rolldownOptions: {
             platform: 'neutral',
           } as never,
         },
@@ -21,7 +21,7 @@ export default defineConfig({
           include: ['waku > rsc-html-stream/server'],
         },
         build: {
-          rollupOptions: {
+          rolldownOptions: {
             platform: 'neutral',
           } as never,
         },
