@@ -405,12 +405,10 @@ const Redirect = ({
       }, 200);
     });
 
-    void p
+    window.navigation
+      .navigate(url, { history: 'replace' })
+      .committed?.then(() => p)
       .then(() => {
-        return window.navigation.navigate(url, { history: 'replace' })
-          .committed;
-      })
-      ?.then(() => {
         console.trace('Redirected to', to);
         reset();
       });
