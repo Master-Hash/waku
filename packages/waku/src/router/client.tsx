@@ -575,7 +575,8 @@ const InnerRouter = ({
   const enhanceFetchRscInternal = useEnhanceFetchRscInternal();
   // It doesn't have to be a ref
   // But passing it to multiple function calls is too complicated
-  const signalRef = useRef<AbortSignal | null>(null);
+  const signalRef = useRef<AbortSignal>(null);
+  const controllerRef = useRef<NavigationPrecommitController>(null);
   useEffect(() => {
     const enhanceFetch =
       (fetchFn: typeof fetch) =>
@@ -620,8 +621,7 @@ const InnerRouter = ({
                   requestedRouteRef.current.path !== path ||
                   (!isStatic && requestedRouteRef.current.query !== query)
                 ) {
-                  // redirected
-                  window.navigation.navigate(path, { history: 'push' });
+                  controllerRef.current?.redirect(path);
                 }
               }
             })
@@ -737,12 +737,13 @@ const InnerRouter = ({
       const navigationType = event.navigationType;
       const previousIndex = window.navigation.currentEntry!.index;
       event.intercept({
-        async precommitHandler() {
+        async precommitHandler(controller) {
           if (signalRef.current) {
             // It happens when click very fast.
             console.warn('Potential race condition due to rapid navigation.');
           }
           signalRef.current = event.signal;
+          controllerRef.current = controller;
           startTransition(async () => {
             // addTransitionType('navigation-' + navigationType);
             if (navigationType === 'traverse') {
@@ -798,6 +799,9 @@ const InnerRouter = ({
             }
             if (signalRef.current === event.signal) {
               signalRef.current = null;
+            }
+            if (controllerRef.current === controller) {
+              controllerRef.current = null;
             }
           });
           await flushAsync();
