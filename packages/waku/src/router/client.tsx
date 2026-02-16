@@ -394,13 +394,21 @@ const Redirect = ({
     handledErrorSet.add(error as object);
 
     const url = new URL(to, window.location.href);
-    window.navigation
-      // FIXME: should use push when sync (not commited), replace when async
-      .navigate(url, { history: 'push' })
-      .committed?.then(() => {
-        // FIXME
-        // ssr-redirect > access sync page with client navigation
-        return new Promise((resolve) => setTimeout(resolve, 200));
+
+    const p = new Promise((resolve) => {
+      // const callback = () => {
+      //   resolve(undefined);
+      //   window.navigation.removeEventListener('navigatesuccess', callback);
+      // };
+      // window.navigation.addEventListener('navigatesuccess', callback);
+      setTimeout(() => {
+        resolve(undefined);
+      }, 200);
+    });
+
+    void p
+      .then(() => {
+        return window.navigation.navigate(url, { history: 'replace' }).committed;
       })
       ?.then(() => {
         console.trace('Redirected to', to);
