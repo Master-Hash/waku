@@ -584,9 +584,7 @@ const InnerRouter = ({
         input: RequestInfo | URL,
         init: RequestInit = { signal: signalRef.current },
       ) => {
-        const skipStr = JSON.stringify(
-          Array.from(cachedIdSetRef.current),
-        );
+        const skipStr = JSON.stringify(Array.from(cachedIdSetRef.current));
         const headers = (init.headers ||= {});
         if (Array.isArray(headers)) {
           headers.push([SKIP_HEADER, skipStr]);
@@ -869,10 +867,7 @@ export function Router({
   const httpStatus = getHttpStatusFromMeta();
   return (
     <Root initialRscPath={initialRscPath} initialRscParams={initialRscParams}>
-      <InnerRouter
-        initialRoute={initialRoute}
-        httpStatus={httpStatus}
-      />
+      <InnerRouter initialRoute={initialRoute} httpStatus={httpStatus} />
     </Root>
   );
 }
