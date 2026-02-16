@@ -90,19 +90,19 @@
     "node": "^24.0.0 || ^22.12.0 || ^20.19.0"
   },
   "dependencies": {
-    "@hono/node-server": "^1.19.0",
-    "@vitejs/plugin-react": "^5.1.0",
-    "@vitejs/plugin-rsc": "^0.5.19",
+    "@hono/node-server": "^1.19.9",
+    "@vitejs/plugin-react": "^5.1.4",
+    "@vitejs/plugin-rsc": "^0.5.20",
     "dotenv": "^17.3.1",
-    "hono": "^4.10.0",
+    "hono": "^4.11.9",
     "magic-string": "^0.30.21",
     "picocolors": "^1.1.1",
     "rsc-html-stream": "^0.0.7",
-    "vite": "^7.2.0"
+    "vite": "^8.0.0-beta.14"
   },
   "devDependencies": {
     "@swc/cli": "^0.8.0",
-    "@types/web": "^0.0.322",
+    "@types/web": "^0.0.336",
     "react": "~19.2.4",
     "react-dom": "~19.2.4",
     "react-server-dom-webpack": "~19.2.4",
