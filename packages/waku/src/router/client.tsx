@@ -395,6 +395,7 @@ const Redirect = ({
 
     const url = new URL(to, window.location.href);
     window.navigation
+      // FIXME: should use push when sync (not commited), replace when async
       .navigate(url, { history: 'push' })
       .committed?.then(() => {
         // FIXME
@@ -627,7 +628,7 @@ const InnerRouter = ({
                       query,
                     };
                   } else {
-                    window.navigation.navigate(path, {history: "push"})
+                    window.navigation.navigate(path, { history: 'push' });
                   }
                 }
               }
@@ -825,11 +826,11 @@ const InnerRouter = ({
 
   // run after new route DOM mounted
   useEffect(() => {
-    resolver.current?.(undefined);
+    resolver.current?.();
     resolver.current = null;
   }, [route]);
 
-  const resolver = useRef<((value: undefined) => void) | null>(null);
+  const resolver = useRef<(value?: undefined) => void>(null);
 
   async function flushAsync() {
     const deferred = Promise.withResolvers();
