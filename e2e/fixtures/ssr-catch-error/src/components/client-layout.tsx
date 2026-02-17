@@ -8,8 +8,10 @@ import { Link } from 'waku';
 
 const FallbackComponent = ({ error, resetErrorBoundary }: FallbackProps) => {
   useEffect(() => {
-    window.addEventListener('popstate', resetErrorBoundary);
-    return () => window.removeEventListener('popstate', resetErrorBoundary);
+    // FIXME
+    const callback = () => setTimeout(resetErrorBoundary, 200);
+    window.navigation.addEventListener('navigate', callback);
+    return () => window.navigation.removeEventListener('navigate', callback);
   }, [resetErrorBoundary]);
   return (
     <div role="alert">
