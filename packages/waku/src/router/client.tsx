@@ -836,8 +836,10 @@ const InnerRouter = ({
   }, [changeRoute, prefetchRoute, has404]);
 
   useEffect(() => {
-    resolver();
-  }, [resolver]);
+    if (!signalRef.current) {
+      resolver();
+    }
+  }, [resolver, route]);
 
   const routeElement = <Slot id={getRouteSlotId(route.path)} />;
   const rootElement = (
