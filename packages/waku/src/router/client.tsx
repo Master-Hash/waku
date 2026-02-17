@@ -372,12 +372,10 @@ const NotFound = ({
 const Redirect = ({
   error,
   to,
-  reset,
   handledErrorSet,
 }: {
   error: unknown;
   to: string;
-  reset: () => void;
   handledErrorSet: WeakSet<object>;
 }) => {
   const router = use(RouterContext);
@@ -394,25 +392,8 @@ const Redirect = ({
 
     const url = new URL(to, window.location.href);
 
-    const p = new Promise((resolve) => {
-      // const callback = () => {
-      //   resolve(undefined);
-      //   window.navigation.removeEventListener('navigatesuccess', callback);
-      // };
-      // window.navigation.addEventListener('navigatesuccess', callback);
-      setTimeout(() => {
-        resolve(undefined);
-      }, 200);
-    });
-
-    window.navigation
-      .navigate(url, { history: 'replace' })
-      .committed?.then(() => p)
-      .then(() => {
-        console.trace('Redirected to', to);
-        reset();
-      });
-  }, [error, handledErrorSet, reset, to]);
+    window.navigation.navigate(url, { history: 'replace' });
+  }, [error, handledErrorSet, to]);
   return null;
 };
 
@@ -421,6 +402,7 @@ class CustomErrorHandler extends Component<
   { error: unknown | null }
 > {
   #handledErrorSet = new WeakSet();
+  #prevLocation = {} as Location;
   constructor(props: {
     has404: boolean;
     error: unknown;
@@ -431,6 +413,15 @@ class CustomErrorHandler extends Component<
   }
   static getDerivedStateFromError(error: unknown) {
     return { error };
+  }
+  componentDidMount() {
+    this.#prevLocation = window.location;
+  }
+  componentDidUpdate() {
+    if (this.state.error !== null && this.#prevLocation !== window.location) {
+      this.setState({ error: null });
+    }
+    this.#prevLocation = window.location;
   }
   reset = () => {
     this.setState({ error: null });
@@ -446,7 +437,6 @@ class CustomErrorHandler extends Component<
           <Redirect
             error={this.state.error}
             to={info.location}
-            reset={this.reset}
             handledErrorSet={this.#handledErrorSet}
           />
         );
