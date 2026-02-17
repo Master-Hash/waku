@@ -645,9 +645,6 @@ const InnerRouter = ({
     );
   }, [enhanceFetchRscInternal]);
   const refetch = useRefetch();
-  const [resolver, setResolver] = useState<(value?: unknown) => void>(
-    () => () => {},
-  );
   const [route, setRoute] = useState(() => ({
     // This is the first initialization of the route, and it has
     // to ignore the hash, because on server side there is none.
@@ -821,9 +818,7 @@ const InnerRouter = ({
               controllerRef.current = null;
             }
           });
-          await new Promise((resolve) => {
-            setResolver(() => resolve);
-          });
+          await flushAsync();
           return;
         },
         scroll: 'after-transition',
@@ -835,11 +830,20 @@ const InnerRouter = ({
     };
   }, [changeRoute, prefetchRoute, has404]);
 
+  // run after new route DOM mounted
   useEffect(() => {
-    if (!signalRef.current) {
-      resolver();
-    }
-  }, [resolver, route]);
+    resolver.current?.();
+    resolver.current = null;
+  }, [route]);
+
+  const resolver = useRef<(value?: undefined) => void>(null);
+
+  async function flushAsync() {
+    const deferred = Promise.withResolvers();
+    resolver.current = deferred.resolve;
+    await deferred.promise;
+    return;
+  }
 
   const routeElement = <Slot id={getRouteSlotId(route.path)} />;
   const rootElement = (
