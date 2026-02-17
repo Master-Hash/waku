@@ -797,6 +797,7 @@ const InnerRouter = ({
               } catch (err) {
                 // Handle 404, etc here
                 customErrorHandlerRef.current?.setState({ error: err });
+                resolver.current?.();
                 if (has404 && err) {
                   const info = getErrorInfo(err);
                   if (info?.status === 404) {
