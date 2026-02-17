@@ -37,7 +37,7 @@ export const ClientLayout = ({ children }: { children: ReactNode }) => {
       </ul>
       <ErrorBoundary
         FallbackComponent={FallbackComponent}
-        resetKeys={[location.pathname]}
+        resetKeys={"location" in globalThis ? [location.pathname] : []}
       >
         {children}
       </ErrorBoundary>
