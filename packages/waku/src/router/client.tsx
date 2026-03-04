@@ -95,6 +95,11 @@ const parseRouteFromLocation = (): RouteProps => {
   return parseRoute(new URL(window.location.href));
 };
 
+const isSameRoute = (next: RouteProps, prev: RouteProps) =>
+  next.path === prev.path &&
+  next.query === prev.query &&
+  next.hash === prev.hash;
+
 let savedRscParams: [query: string, rscParams: URLSearchParams] | undefined;
 
 const createRscParams = (query: string): URLSearchParams => {
@@ -106,13 +111,17 @@ const createRscParams = (query: string): URLSearchParams => {
   return rscParams;
 };
 
+type ChangeRouteOptions = {
+  shouldScroll: boolean;
+  skipRefetch?: boolean;
+  mode?: undefined | 'push' | 'replace';
+  url?: URL | undefined;
+  unstable_startTransition?: ((fn: TransitionFunction) => void) | undefined;
+};
+
 type ChangeRoute = (
   route: RouteProps,
-  options: {
-    shouldScroll: boolean;
-    skipRefetch?: boolean;
-    unstable_startTransition?: ((fn: TransitionFunction) => void) | undefined;
-  },
+  options: ChangeRouteOptions,
 ) => Promise<void>;
 
 type PrefetchRoute = (route: RouteProps) => void;
@@ -255,35 +264,34 @@ export function Link({
   const [ref, setRef] = useSharedRef<HTMLAnchorElement>(refProp);
 
   useEffect(() => {
-    if (unstable_prefetchOnView && ref.current) {
-      const observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              const url = new URL(to, window.location.href);
-              if (router && url.href !== window.location.href) {
-                const route = parseRoute(url);
-                router.prefetchRoute(route);
-              }
-            }
-          });
-        },
-        { threshold: 0.1 },
-      );
-
-      observer.observe(ref.current);
-
-      return () => {
-        observer.disconnect();
-      };
+    if (!unstable_prefetchOnView || !ref.current) {
+      return;
     }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const url = new URL(to, window.location.href);
+            if (router && url.href !== window.location.href) {
+              router.prefetchRoute(parseRoute(url));
+            }
+          }
+        });
+      },
+      { threshold: 0.1 },
+    );
+
+    observer.observe(ref.current);
+
+    return () => {
+      observer.disconnect();
+    };
   }, [unstable_prefetchOnView, router, to, ref]);
   const onMouseEnter = unstable_prefetchOnEnter
     ? (event: MouseEvent<HTMLAnchorElement>) => {
         const url = new URL(to, window.location.href);
         if (url.href !== window.location.href) {
-          const route = parseRoute(url);
-          prefetchRoute(route);
+          prefetchRoute(parseRoute(url));
         }
         props.onMouseEnter?.(event);
       }
@@ -347,11 +355,15 @@ export class ErrorBoundary extends Component<
 }
 
 const NotFound = ({
+  error,
   has404,
   reset,
+  handledErrorSet,
 }: {
+  error: unknown;
   has404: boolean;
   reset: () => void;
+  handledErrorSet: WeakSet<object>;
 }) => {
   const router = use(RouterContext);
   if (!router) {
@@ -360,6 +372,10 @@ const NotFound = ({
   const { changeRoute } = router;
   useEffect(() => {
     if (has404) {
+      if (handledErrorSet.has(error as object)) {
+        return;
+      }
+      handledErrorSet.add(error as object);
       const url = new URL('/404', window.location.href);
       changeRoute(parseRoute(url), { shouldScroll: false })
         .then(() => {
@@ -369,7 +385,7 @@ const NotFound = ({
           console.log('Error while navigating to 404:', err);
         });
     }
-  }, [has404, reset, changeRoute]);
+  }, [error, has404, reset, changeRoute, handledErrorSet]);
   return has404 ? null : <h1>Not Found</h1>;
 };
 
@@ -405,7 +421,7 @@ class CustomErrorHandler extends Component<
   { has404: boolean; children?: ReactNode },
   { error: unknown | null }
 > {
-  #handledErrorSet = new WeakSet();
+  handledErrorSet = new WeakSet();
   #prevLocation = {} as Location;
   constructor(props: {
     has404: boolean;
@@ -432,20 +448,28 @@ class CustomErrorHandler extends Component<
   };
   render() {
     if (this.state.error !== null) {
-      const info = getErrorInfo(this.state.error);
+      const error = this.state.error;
+      const info = getErrorInfo(error);
       if (info?.status === 404) {
-        return <NotFound has404={this.props.has404} reset={this.reset} />;
+        return (
+          <NotFound
+            error={error}
+            has404={this.props.has404}
+            reset={this.reset}
+            handledErrorSet={this.handledErrorSet}
+          />
+        );
       }
       if (info?.location) {
         return (
           <Redirect
-            error={this.state.error}
+            error={error}
             to={info.location}
-            handledErrorSet={this.#handledErrorSet}
+            handledErrorSet={this.handledErrorSet}
           />
         );
       }
-      throw this.state.error;
+      throw error;
     }
     return this.props.children;
   }
@@ -505,14 +529,27 @@ export function Slice({
   return <Slot id={slotId}>{children}</Slot>;
 }
 
-const handleScroll = () => {
-  const { hash } = window.location;
-  const { state } = window.history;
-  const element = hash && document.getElementById(hash.slice(1));
+const scrollToRoute = (
+  route: RouteProps,
+  behavior: ScrollBehavior,
+  scrollTopForMissingHash: boolean,
+) => {
+  if (route.hash) {
+    const element = document.getElementById(route.hash.slice(1));
+    if (!element && !scrollTopForMissingHash) {
+      return;
+    }
+    window.scrollTo({
+      left: 0,
+      top: element ? element.getBoundingClientRect().top + window.scrollY : 0,
+      behavior,
+    });
+    return;
+  }
   window.scrollTo({
     left: 0,
-    top: element ? element.getBoundingClientRect().top + window.scrollY : 0,
-    behavior: state?.waku_new_path ? 'instant' : 'auto',
+    top: 0,
+    behavior,
   });
 };
 
@@ -546,9 +583,10 @@ const InnerRouter = ({
 
   const elementsPromise = useElementsPromise();
   const [has404, setHas404] = useState(false);
-  const requestedRouteRef = useRef<RouteProps>(initialRoute);
   const staticPathSetRef = useRef(new Set<string>());
   const cachedIdSetRef = useRef(new Set<string>());
+  // FIXME this "fetchingSlices" hack feels suboptimal.
+  const fetchingSlicesRef = useRef(new Set<SliceId>());
   useEffect(() => {
     elementsPromise.then(
       (elements) => {
@@ -587,30 +625,25 @@ const InnerRouter = ({
 
   // Update the route post-load to include the current hash.
   useEffect(() => {
-    setRoute((prev) => {
-      if (
-        prev.path === initialRoute.path &&
-        prev.query === initialRoute.query &&
-        prev.hash === initialRoute.hash
-      ) {
-        return prev;
-      }
-      return initialRoute;
-    });
+    setRoute((prev) => (isSameRoute(prev, initialRoute) ? prev : initialRoute));
   }, [initialRoute]);
+
+  const routeRef = useRef(route);
+  useEffect(() => {
+    routeRef.current = route;
+  }, [route]);
 
   const customErrorHandlerRef = useRef<CustomErrorHandler>(null);
   const changeRoute: ChangeRoute = useCallback(
-    async (route, options) => {
+    async (nextRoute, options) => {
       const signal = routeChangeAbortSignalRef.current;
-      requestedRouteRef.current = route;
       const startTransitionFn =
         options.unstable_startTransition || ((fn: TransitionFunction) => fn());
       customErrorHandlerRef.current?.reset();
-      const { skipRefetch } = options || {};
-      if (!staticPathSetRef.current.has(route.path) && !skipRefetch) {
-        const rscPath = encodeRoutePath(route.path);
-        const rscParams = createRscParams(route.query);
+      const { skipRefetch } = options;
+      if (!staticPathSetRef.current.has(nextRoute.path) && !skipRefetch) {
+        const rscPath = encodeRoutePath(nextRoute.path);
+        const rscParams = createRscParams(nextRoute.query);
         const skipHeaderEnhancer =
           (fetchFn: typeof fetch) =>
           (input: RequestInfo | URL, init: RequestInit = {}) => {
@@ -638,19 +671,15 @@ const InnerRouter = ({
           if (routeData) {
             const [path, query] = routeData as [string, string];
             if (
-              requestedRouteRef.current.path !== path ||
-              (!isStatic && requestedRouteRef.current.query !== query)
+              nextRoute.path !== path ||
+              (!isStatic && nextRoute.query !== query)
             ) {
               if (controllerRef.current) {
                 controllerRef.current?.redirect(path);
-                requestedRouteRef.current = {
-                  ...requestedRouteRef.current,
-                  path,
-                  query,
-                };
               } else {
                 window.navigation.navigate(path, { history: 'push' });
               }
+              nextRoute = { path, query, hash: '' };
             }
           }
         } catch (e) {
@@ -664,9 +693,9 @@ const InnerRouter = ({
       startTransitionFn(() => {
         if (!signal?.aborted) {
           if (options.shouldScroll) {
-            handleScroll();
+            scrollToRoute(nextRoute, 'instant', true);
           }
-          setRoute(requestedRouteRef.current);
+          setRoute(nextRoute);
         }
       });
     },
@@ -824,7 +853,7 @@ const InnerRouter = ({
         route,
         changeRoute,
         prefetchRoute,
-        fetchingSlices: useRef(new Set<SliceId>()).current,
+        fetchingSlices: fetchingSlicesRef.current,
       }}
     >
       <PendingContext value={isPending}>{rootElement}</PendingContext>
