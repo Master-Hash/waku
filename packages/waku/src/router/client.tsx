@@ -106,7 +106,6 @@ type ChangeRoute = (
   options: {
     shouldScroll: boolean;
     skipRefetch?: boolean;
-    signal?: AbortSignal;
     unstable_startTransition?: ((fn: TransitionFunction) => void) | undefined;
   },
 ) => Promise<void>;
@@ -661,6 +660,7 @@ const InnerRouter = ({
   const customErrorHandlerRef = useRef<CustomErrorHandler>(null);
   const changeRoute: ChangeRoute = useCallback(
     async (route, options) => {
+      const isAborted = () => signalRef.current?.aborted;
       requestedRouteRef.current = route;
       const startTransitionFn =
         options.unstable_startTransition || ((fn: TransitionFunction) => fn());
@@ -686,7 +686,7 @@ const InnerRouter = ({
         }
       }
       startTransitionFn(() => {
-        if (!options.signal?.aborted) {
+        if (!isAborted()) {
           if (options.shouldScroll) {
             handleScroll();
           }
@@ -772,7 +772,6 @@ const InnerRouter = ({
               await changeRoute(route, {
                 shouldScroll: false,
                 unstable_startTransition: startTransition,
-                signal: event.signal,
               }).catch((err) => {
                 console.log('Error while navigating back:', err);
               });
@@ -782,7 +781,6 @@ const InnerRouter = ({
                 await changeRoute(route, {
                   shouldScroll: false,
                   unstable_startTransition: startTransition,
-                  signal: event.signal,
                 });
               } catch (err) {
                 // Handle 404, etc here
@@ -794,7 +792,6 @@ const InnerRouter = ({
                     await changeRoute(
                       { path: '/404', query: '', hash: '' },
                       {
-                        signal: event.signal,
                         shouldScroll: false,
                       },
                     );

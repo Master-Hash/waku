@@ -2,7 +2,7 @@ name: E2E
 
 on:
   push:
-    branches: [main, rash-router]
+    branches: [main, rash-router, rash-router-legacy]
     paths:
       - 'packages/**'
       - 'examples/**'
