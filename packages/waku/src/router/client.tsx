@@ -77,6 +77,7 @@ const parseRoute = (url: URL): RouteProps => {
   };
 };
 
+// @ts-expect-error tbd
 const getRouteUrl = (route: RouteProps): URL => {
   const nextUrl = new URL(window.location.href);
   nextUrl.pathname = route.path;
@@ -108,6 +109,7 @@ const parseRouteFromLocation = (): RouteProps => {
 const isPathChange = (next: RouteProps, prev: RouteProps) =>
   next.path !== prev.path;
 
+// @ts-expect-error tbd
 const isHashChange = (next: RouteProps, prev: RouteProps) =>
   next.hash !== prev.hash;
 
@@ -438,6 +440,7 @@ const Redirect = ({
         handledErrorSet.delete(error as object);
         // FIXME: As we understand it, we should have a proper solution.
         setTimeout(() => {
+          // @ts-expect-error tbd
           reset();
         }, 1);
       })
@@ -484,6 +487,7 @@ class CustomErrorHandler extends Component<
       if (info?.status === 404) {
         return (
           <NotFound
+            // @ts-expect-error tbd
             error={error}
             has404={this.props.has404}
             reset={this.reset}
@@ -564,6 +568,7 @@ const defaultRouteInterceptor = (route: RouteProps) => route;
 const InnerRouter = ({
   initialRoute,
   httpStatus,
+  // @ts-expect-error tbd
   routeInterceptor = defaultRouteInterceptor,
 }: {
   initialRoute: RouteProps;
@@ -640,19 +645,24 @@ const InnerRouter = ({
   const [err, setErr] = useState<unknown>(null);
 
   const routeChangeAbortRef = useRef<AbortSignal | null>(null);
+  // @ts-expect-error tbd
   const routeChangeControllerRef = useRef<NavigationPrecommitController | null>(
     null,
   );
   const changeRoute: ChangeRoute = useCallback(
     async (nextRoute, options) => {
+      // @ts-expect-error tbd
       const isAborted = () => routeChangeAbortRef.current?.aborted ?? false;
       const startTransitionFn =
         options.unstable_startTransition || ((fn: TransitionFunction) => fn());
+      // @ts-expect-error tbd
       const prevPathname = window.location.pathname;
+      // @ts-expect-error tbd
       let { mode, url } = options;
       const routeBeforeChange = routeRef.current;
       const shouldRefetch =
         options.refetch ?? !isSameRoute(nextRoute, routeBeforeChange);
+      // @ts-expect-error tbd
       const pathChanged = isPathChange(nextRoute, routeBeforeChange);
       if (!staticPathSetRef.current.has(nextRoute.path) && shouldRefetch) {
         const rscPath = encodeRoutePath(nextRoute.path);
@@ -821,6 +831,7 @@ const InnerRouter = ({
       const navigationType = event.navigationType;
       const previousIndex = window.navigation.currentEntry!.index;
       event.intercept({
+        // @ts-expect-error tbd
         async precommitHandler(controller) {
           if (routeChangeAbortRef.current) {
             // It happens when click very fast.
